@@ -1,9 +1,9 @@
-# Jenkins GitOps Deployment using Helmfile
+# <font color="orange">Jenkins IaC Deployment using Helmfile</font>
 
 This README provides instructions on how to deploy Jenkins using Helmfile.
-Helm Chart: `https://artifacthub.io/packages/helm/jenkinsci/jenkins`
+Source Helm Chart: `https://artifacthub.io/packages/helm/jenkinsci/jenkins`
 
-## Prerequisites
+## <font color="purple">Prerequisites</font>
 
 Before you begin, ensure you have the following installed:
 
@@ -11,7 +11,7 @@ Before you begin, ensure you have the following installed:
 - [Helmfile](https://github.com/helmfile/helmfile#installation)
 - [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/)
 
-## Setup
+## <font color="purple">Setup</font>
 
 1. Clone the repository containing the Helmfile:
 
@@ -26,7 +26,7 @@ Before you begin, ensure you have the following installed:
    export HELM_SECRETS_DRIVER=vault
    ```
 
-## Commands
+## <font color="purple">Commands</font>
 
 ### Download Dependencies
 
@@ -46,19 +46,13 @@ helmfile template
 
 ### Deploy Jenkins
 
-To deploy Jenkins using Helmfile, run:
-
-```sh
-helmfile sync
-```
-
-Alternatively, to deploy from a specific Helmfile, run:
+Deploy the **Helmfile**, run:
 
 ```sh
 helmfile sync -f helmfile-jenkins.yaml
 ```
 
-To deploy Jenkins using Helm, run:
+To deploy Jenkins using **Helm**, run:
 
 ```sh
 helm install --values=./custom-values.yml jenkins jenkins/jenkins
@@ -80,29 +74,25 @@ To destroy the Jenkins deployment, run:
 helmfile destroy
 ```
 
-## Post-Deployment Steps
+## <font color="purple">Post-Deployment Steps</font>
 
+<details><summary></a></summary>
 1. Apply the Jenkins service ingress:
 
-   ```sh
-   kubectl apply -f jenkins-service-ingress.yaml
-   ```
+```sh
+kubectl apply -f jenkins-service-ingress.yaml
+```
 
 2. Retrieve the Jenkins admin password:
 
-   ```sh
-   kubectl get secret --namespace jenkins jenkins -o jsonpath="{.data.jenkins-admin-password}" | base64 --decode
-   ```
+```sh
+kubectl get secret --namespace jenkins jenkins -o jsonpath="{.data.jenkins-admin-password}" | base64 --decode
+```
 
 3. Port-forward to access Jenkins:
 
-   ```sh
-   kubectl port-forward $(kubectl get pods --selector "app.kubernetes.io/instance=jenkins" --output=name) 8080:8080
-   ```
+```sh
+kubectl port-forward $(kubectl get pods --selector "app.kubernetes.io/instance=jenkins" --output=name) 8080:8080
+```
 
-## Notes
-
-- Ensure that the `HELM_SECRETS_DRIVER` environment variable is set to `vault` before running the Helmfile commands.
-- The Helmfile configuration includes various plugins and tools for Jenkins, as well as custom configurations for appearance, security, credentials, tools, and more.
-
-For more information on Helmfile, visit the [Helmfile GitHub repository](https://github.com/helmfile/helmfile).
+   </details>
