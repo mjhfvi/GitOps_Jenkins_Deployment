@@ -1,0 +1,39 @@
+---
+fileignoreconfig:
+  - filename: .gitleaks.toml
+    checksum: fff57693c33ca6f1d75c0005d4f55b511c3bcedaabaaa68c565dfd0a26d81db9
+  - filename: .yamllint
+    checksum: 68d946e0e992a12d5bfb0c07a0aa1a69adec8f2b8624443b968e28b6297dec6e
+  - filename: documentation/KUBERNETES.md
+    checksum: 6af0b5371e6a2f2fc9651c2a735075b22a745f63fd005f912055dd11308d789f
+  - filename: GlobalSharedLibraries/vars/GitSecretsReport.groovy
+    checksum: 571fac40bb778acabc0567a0263d9a2de9634c3abc8b8147eb06c9832bdf0463
+  - filename: README.md
+    checksum: edb98f7c47c08bee47049be9058e881513af4366ad6a4208350b9589eed24ba0
+  - filename: .pre-commit-config.yaml
+    checksum: 72bba65b2b3362b942557902f1124c9f466c0cd2e0ff1be0e67288175e3f07b5
+  - filename: pipelines/Pipeline_Build_Terraform.groovy
+    checksum: 081528ac3e344a761d4e90dde62524b2fceaca83b0a933a970ce94b7859eb81f
+  - filename: helmfile_basic_deployment/helmfile-jenkins.yaml
+    checksum: 78b6a12063918bb71d51d3a7829cb5117d202701a026ea04c13a5e74c4d95a27
+  - filename: helmfile_blue_green_deployment/helmfile-jenkins-blue.yaml
+    checksum: c7f7159f015bd01ce38b14c1aa53e974e491a4a8648ed3199023807a4428cb55
+  - filename: pipelines/Pipeline_Git_Code_Validation.groovy
+    checksum: 1f811b78eae83d8dc5939cb720c37fb41051a705a6ca2757cf98e1e4027a752f
+  - filename: pipelines/Pipeline_Build_Continuous_Deployment.groovy
+    checksum: 5baf40007e3068a479586c8562a0e952fd340d37c1cd71cf958f2cb2569114e7
+  - filename: helmfile_blue_green_deployment/helmfile-jenkins-green.yaml
+    checksum: 30337dd6dccae0c6fb24f213301af02da36bee8281fc6a192bde9796017b0bec
+  - filename: pipelines/Pipeline_Build_Docker.groovy
+    checksum: 5564e13ab645beb09721c8c7f1ec4be3fef836bb297f57a60ad22a1ef91d1e6a
+  - filename: pipelines/Full_Pipeline.groovy
+    checksum: 86293da71dfa68dd9d6faf41ba91c4c65cf31dbeb2de196d9a71e162ec0e40db
+  - filename: documentation/PIPELINES.md
+    checksum: b6876ecc8ac21fa6cafc9eacb0304b97767c18a5523a2c5bbb9aa6c8b8816897
+  - filename: documentation/PRECOMMIT.md
+    checksum: 54d1bd8445c584ebf9d735ff89cdfe5a263cbbbc9e15edd96e61c737b6843ebc
+  - filename: documentation/CERTIFICATES.md
+    checksum: 4c1af1409f76cc12244a28e3ed1ff25673d80417ce3773307d7b20b4bade209c
+  - filename: helm_jenkins_values/custom-values.yml
+    checksum: 803e7095c68a1475d075783a434d9810c47f84e2d9cbddf474835c77084455b1
+version: ""

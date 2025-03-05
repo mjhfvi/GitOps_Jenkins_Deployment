@@ -1,0 +1,579 @@
+---
+filepath: helmfile.yaml
+helmBinary: helm
+# kustomizeBinary: kustomize
+helmDefaults:
+  # verify: false
+  # enableDNS: false
+  # waitForJobs: false
+  timeout: 60
+  # skipDeps: false
+  # reuseValues: false
+  # deleteWait: false
+  # deleteTimeout: 0
+repositories:
+  - name: jenkins
+    url: https://charts.jenkins.io
+releases:
+  - name: jenkins
+    namespace: jenkins
+    createNamespace: true
+    chart: '{{`{{ .Release.Name }}`}}/{{`{{ .Release.Name }}`}}'
+    labels:
+      app.kubernetes.io/name: jenkins
+    #   version: 0.0.0
+    #   missingFileHandler: Warn  # set to either "Error" or "Warn". "Error" instructs helmfile to fail when unable to find a values or secrets file. When "Warn", it prints the file and continues.
+    #   verify: true
+    #   timeout: 60
+    #   cleanupOnFail: true
+    values:
+      - admin:
+          username: ''
+      - jenkinsAdminEmail: ''
+      - javaOpts: -Xms512m -Xmx1024m -XX:+AlwaysPreTouch -XX:+UseStringDeduplication
+          -XX:+ParallelRefProcEnabled -XX:+DisableExplicitGC
+      - controller:
+          jenkinsUrl: http://jenkins.localhost:30001/
+          image:
+            tag: 2.499-jdk17
+          csrf:
+            defaultCrumbIssuer:  # -- Enable the default CSRF Crumb issuer
+              enabled: false
+          serviceType: NodePort  # LoadBalancer, ClusterIP, NodePort
+          nodePort: 30001
+          JCasC:
+            configScripts:
+              jcasc-custom-config-appearance: |
+                appearance:
+                  pipelineGraphView:
+                    showGraphOnBuildPage: false
+                    showGraphOnJobPage: false
+                  prism:
+                    theme: PRISM
+                  themeManager:
+                    disableUserThemes: false
+                    theme: "dark"
+              jcasc-custom-config-jenkins-system: |
+                jenkins:
+                  systemMessage: "Welcome Back, Have A Nice Day!!"
+                  globalNodeProperties:
+                  - diskSpaceMonitor:
+                      freeDiskSpaceThreshold: "5GiB"
+                      freeDiskSpaceWarningThreshold: "10GiB"
+                      freeTempSpaceThreshold: "5GiB"
+                      freeTempSpaceWarningThreshold: "10GiB"
+                  - envVars:
+                      env:
+                      - key: "PATH+EXTRA"
+                        value: "/usr/local/bin/"
+              jcasc-custom-jenkins-security: |
+                security:
+                  gitHostKeyVerificationConfiguration:
+                    sshHostKeyVerificationStrategy: "acceptFirstConnectionStrategy"
+              jcasc-custom-config-credentials: |  # pragma: allowlist secret
+                credentials:
+                  system:
+                    domainCredentials:
+                    - credentials:
+                      - basicSSHUserPrivateKey:
+                          description: "GitHub SSH Access Credentials"
+                          id: "github-ssh-access-credentials"
+                          passphrase: "PASSWORD"
+                          privateKeySource:
+                            directEntry:
+                              privateKey: |
+                                -----BEGIN OPENSSH PRIVATE KEY-----
+                                -----END OPENSSH PRIVATE KEY-----
+                          scope: GLOBAL
+                          username: "USERNAME"
+                          usernameSecret: true
+                      - basicSSHUserPrivateKey:
+                          description: "Jenkins Linux Node Access Credentials"
+                          id: "jenkins-linux-node-access-credentials"
+                          passphrase: "PASSWORD"
+                          privateKeySource:
+                            directEntry:
+                              privateKey: |
+                                -----BEGIN OPENSSH PRIVATE KEY-----
+                                g27A0FI+CQ==
+                                -----END OPENSSH PRIVATE KEY-----
+                          scope: SYSTEM
+                          username: "USERNAME"
+                          usernameSecret: true
+                      - usernamePassword:
+                          description: "Docker Hub Login Credentials"
+                          id: "docker-hub-login-credentials"
+                          password: "{}"
+                          scope: GLOBAL
+                          username: "USERNAME"
+                          usernameSecret: true
+                      - string:
+                          description: "Private Aws Access Key"
+                          id: "aws-access-key"
+                          scope: GLOBAL
+                          secret: "{}"
+                      - string:
+                          description: "Private Aws Secret Key"
+                          id: "aws-secret-key"
+                          scope: GLOBAL
+                          secret: "{}"
+              jcasc-custom-config-tools: |
+                tool:
+                  customTool:
+                    installations:
+                    - name: "Python"
+                      properties:
+                      - installSource:
+                          installers:
+                          - zip:
+                              subdir: "Python-3.12.4"
+                              url: "https://www.python.org/ftp/python/3.12.4/Python-3.12.4.tgz"
+                    - name: "GitLeaks"
+                      properties:
+                      - installSource:
+                          installers:
+                          - zip:
+                              label: "linux"
+                              subdir: "gitleaks_8.18.3_linux_arm64"
+                              url: "https://github.com/gitleaks/gitleaks/releases/download/v8.18.3/gitleaks_8.18.3_linux_arm64.tar.gz"
+                    - name: "Autopep8"
+                      properties:
+                      - installSource:
+                          installers:
+                          - command:
+                              command: "pip install --upgrade autopep8"
+                              label: "linux"
+                              toolHome: "/usr/local/bin/"
+                    - name: "Golangci-lint"
+                      properties:
+                      - installSource:
+                          installers:
+                          - zip:
+                              label: "linux"
+                              subdir: "golangci-lint-1.59.1-linux-amd64"
+                              url: "https://github.com/golangci/golangci-lint/releases/download/v1.59.1/golangci-lint-1.59.1-linux-amd64.tar.gz"
+                    - name: "Yamllint"
+                      properties:
+                      - installSource:
+                          installers:
+                          - command:
+                              command: "pip install --upgrade yamllint"
+                              label: "linux"
+                              toolHome: "/usr/local/bin/"
+                    - name: "PreCommit"
+                      properties:
+                      - installSource:
+                          installers:
+                          - command:
+                              command: |
+                                pip install pre-commit
+                              label: "linux"
+                              toolHome: "/usr/local/bin/"
+                    - name: "Check-jsonschema"
+                      properties:
+                      - installSource:
+                          installers:
+                          - command:
+                              command: "pip install --upgrade check-jsonschema"
+                              label: "linux"
+                              toolHome: "/usr/local/bin/"
+              jcasc-custom-config-ansiColor: |
+                unclassified:
+                  ansiColorBuildWrapper:
+                    colorMaps:
+                    - black: "#000000"
+                      blackB: "#4C4C4C"
+                      blue: "#1E90FF"
+                      blueB: "#4682B4"
+                      cyan: "#00CDCD"
+                      cyanB: "#00FFFF"
+                      green: "#00CD00"
+                      greenB: "#00FF00"
+                      magenta: "#CD00CD"
+                      magentaB: "#FF00FF"
+                      name: "xterm"
+                      red: "#CD0000"
+                      redB: "#FF0000"
+                      white: "#E5E5E5"
+                      whiteB: "#FFFFFF"
+                      yellow: "#CDCD00"
+                      yellowB: "#FFFF00"
+                    - black: "#000000"
+                      blackB: "#555555"
+                      blue: "#0000AA"
+                      blueB: "#5555FF"
+                      cyan: "#00AAAA"
+                      cyanB: "#55FFFF"
+                      defaultBackground: 0
+                      defaultForeground: 7
+                      green: "#00AA00"
+                      greenB: "#55FF55"
+                      magenta: "#AA00AA"
+                      magentaB: "#FF55FF"
+                      name: "vga"
+                      red: "#AA0000"
+                      redB: "#FF5555"
+                      white: "#AAAAAA"
+                      whiteB: "#FFFFFF"
+                      yellow: "#AA5500"
+                      yellowB: "#FFFF55"
+                    - black: "black"
+                      blackB: "black"
+                      blue: "blue"
+                      blueB: "blue"
+                      cyan: "cyan"
+                      cyanB: "cyan"
+                      green: "green"
+                      greenB: "green"
+                      magenta: "magenta"
+                      magentaB: "magenta"
+                      name: "css"
+                      red: "red"
+                      redB: "red"
+                      white: "white"
+                      whiteB: "white"
+                      yellow: "yellow"
+                      yellowB: "yellow"
+                    - black: "#2E3436"
+                      blackB: "#2E3436"
+                      blue: "#3465A4"
+                      blueB: "#3465A4"
+                      cyan: "#06989A"
+                      cyanB: "#06989A"
+                      defaultBackground: 0
+                      defaultForeground: 7
+                      green: "#4E9A06"
+                      greenB: "#4E9A06"
+                      magenta: "#75507B"
+                      magentaB: "#75507B"
+                      name: "gnome-terminal"
+                      red: "#CC0000"
+                      redB: "#CC0000"
+                      white: "#D3D7CF"
+                      whiteB: "#D3D7CF"
+                      yellow: "#C4A000"
+                      yellowB: "#C4A000"
+                    globalColorMapName: "xterm"
+              jcasc-custom-config-globalConfig: |
+                unclassified:
+                  scmGit:
+                    globalConfigEmail: "EMAIL"
+                    globalConfigName: "USERNAME"
+              jcasc-custom-config-globalLibraries: |
+                unclassified:
+                  globalLibraries:
+                    libraries:
+                    - defaultVersion: "main"
+                      implicit: true
+                      name: "Jenkins-Shared-Library"
+                      retriever:
+                        modernSCM:
+                          clone: true
+                          libraryPath: "jenkins/GlobalSharedLibraries/"
+                          scm:
+                            git:
+                              credentialsId: "github-ssh-access-credentials"
+                              id: "6bcd3dda-0e2f-4d12-8519-063a1dde5457"
+                              remote: "https://github.com/mjhfvi/GitOpsAutomation.git"
+                              traits:
+                              - "gitBranchDiscovery"
+              jcasc-custom-config-jobs: |
+                jobs:
+                  - script: |
+                      pipelineJob('GitOpsAutomation-Pipeline-Job') {
+                        definition {
+                          description('GitHub GitOpsAutomation Repository')
+                          cpsScm {
+                            scm {
+                              git {
+                                remote {
+                                  name('GitOpsAutomation')
+                                  github('mjhfvi/GitOpsAutomation', 'ssh')
+                                  credentials('github-ssh-access-credentials')
+                                }
+                                branches('*/main')
+                              }
+                            }
+                            scriptPath('pipelines/Full_Pipeline.groovy')
+                          }
+                        }
+                      }
+              jcasc-custom-config-loggers: |
+                jenkins:
+                  log:
+                    recorders:
+                    - loggers:
+                      - level: "ALL"
+                        name: "org.jenkinsci.plugins.workflow"
+                      name: "Pipeline Logs"
+              jcasc-custom-config-nodes: |
+                jenkins:
+                  nodes:
+                    - permanent:
+                        labelString: "linux docker"
+                        launcher:
+                          ssh:
+                            credentialsId: "jenkins-linux-node-access-credentials"
+                            host: "SERVER_IP"
+                            port: 22
+                            sshHostKeyVerificationStrategy:
+                              manuallyTrustedKeyVerificationStrategy:
+                                requireInitialManualTrust: true
+                        name: "SERVER_NAME"
+                        nodeDescription: "Jenkins Automation Node"
+                        nodeProperties:
+                        - diskSpaceMonitor:
+                            freeDiskSpaceThreshold: "1GiB"
+                            freeDiskSpaceWarningThreshold: "2GiB"
+                            freeTempSpaceThreshold: "1GiB"
+                            freeTempSpaceWarningThreshold: "2GiB"
+                        - toolLocation:
+                            locations:
+                            - key: "com.cloudbees.jenkins.plugins.customtools.CustomTool$DescriptorImpl@Python"
+                        remoteFS: "/home/root/jenkins"
+                        retentionStrategy: "always"
+          installPlugins:
+            - kubernetes
+            - workflow-aggregator
+            - git
+            - configuration-as-code
+            # - asm-api
+            - audit-log
+            # - uno-choice
+            # - additional-metrics
+            # - slave-setup
+            # - analysis-model-api
+            - ansicolor
+            # - ant
+            # - apache-httpcomponents-client-4-api
+            # - apache-httpcomponents-client-5-api
+            # - artifactory
+            # - authentication-tokens
+            # - blueocean-autofavorite
+            - badge
+            # - cloudbees-bitbucket-branch-source
+            # - blueocean-bitbucket-pipeline
+            # - blueocean
+            # - blueocean-core-js
+            # - blueocean-pipeline-editor
+            # - bootstrap5-api
+            # - branch-api
+            # - build-environment
+            # - build-history-manager
+            # - build-history-metrics-plugin
+            # - build-name-setter
+            # - build-time-blame
+            # - build-timeout
+            - buildtriggerbadge
+            # - byte-buddy-api
+            # - caffeine-api
+            # - checks-api
+            # - cloud-stats
+            - cloudbees-disk-usage-simple
+            # - command-launcher
+            # - blueocean-commons
+            # - blueocean-config
+            # - config-file-provider
+            # - configuration-as-code
+            - console-badge
+            # - console-tail
+            # - credentials-binding
+            - credentials
+            - custom-folder-icon
+            - custom-tools-plugin
+            # - customized-build-message
+            - dark-theme
+            # - dashboard-view
+            # - blueocean-dashboard
+            # - data-tables-api
+            # - database
+            # - delivery-pipeline-plugin
+            # - dependencyanalyzer
+            # - depgraph-view
+            # - jenkins-design-language
+            # - devops-portal
+            - display-console-output
+            # - display-url-api
+            # - blueocean-display-url
+            # - docker-java-api
+            - docker-commons
+            - docker-workflow
+            - docker-slaves
+            - docker-plugin
+            # - downstream-build-cache
+            # - durable-task
+            # - echarts-api
+            # - eddsa-api
+            # - editable-choice
+            # - enhanced-metrics
+            # - envinject-api
+            # - envinject
+            # - environment-script
+            # - blueocean-events
+            # - extended-choice-parameter
+            # - external-monitor-job
+            - extra-tool-installers
+            # - favorite
+            # - cloudbees-folder
+            # - font-awesome-api
+            # - forensics-api
+            # - git-parameter
+            # - blueocean-git-pipeline
+            - generic-webhook-trigger
+            # - git-client
+            # - git
+            # - git-server
+            # - github-api
+            # - github-branch-source
+            # - blueocean-github-pipeline
+            - github
+            # - github-app-kubernetes-credentials
+            # - gradle
+            # - groovy
+            # - gson-api
+            # - htmlpublisher
+            - http_request
+            # - handy-uri-templates-2-api
+            # - cloudbees-jenkins-advisor
+            - hidden-parameter
+            # - instance-identity
+            # - ionicons-api
+            # - jaxb
+            # - jquery3-api
+            # - json-api
+            # - json-path-api
+            # - jsch
+            - job-dsl
+            # - junit
+            # - blueocean-jwt
+            # - jackson2-api
+            # - jakarta-activation-api
+            # - jakarta-mail-api
+            # - jjwt-api
+            # - javax-activation-api
+            # - javax-mail-api
+            # - javadoc
+            # - jersey2-api
+            - jobConfigHistory
+            # - joda-time-api
+            # - kubernetes
+            # - kubernetes-cli
+            # - kubernetes-client-api
+            # - kubernetes-credentials
+            # - kubernetes-credentials-provider
+            # - kubernetes-pipeline-devops-steps
+            # - ldap
+            # - log-cli
+            # - log-file-filter
+            # - log-parser
+            # - login-theme
+            # - mailer
+            - mask-passwords
+            - material-theme
+            # - matrix-auth
+            # - matrix-project
+            # - maven-plugin
+            # - metrics
+            # - mina-sshd-api-common
+            # - mina-sshd-api-core
+            # - monitoring
+            # - multiselect-parameter
+            # - node-iterator-api
+            # - nodelabelparameter
+            # - antisamy-markup-formatter
+            # - okhttp-api
+            - jdk-tool
+            # - pam-auth
+            - parameter-separator
+            # - parameterized-trigger
+            # - blueocean-personalization
+            - workflow-aggregator
+            - pipeline-as-yaml
+            # - pipeline-config-history
+            # - pipeline-graph-analysis
+            - pipeline-graph-view
+            # - blueocean-pipeline-scm-api
+            - pipeline-utility-steps
+            # - blueocean-pipeline-api-impl
+            # - pipeline-timeline
+            # - workflow-api
+            # - workflow-basic-steps
+            # - pipeline-build-step
+            # - pipeline-model-definition
+            # - pipeline-model-extensions
+            # - pipeline-github-lib
+            # - workflow-cps
+            # - pipeline-groovy-lib
+            # - pipeline-input-step
+            # - workflow-job
+            # - pipeline-milestone-step
+            # - pipeline-model-api
+            # - workflow-multibranch
+            # - pipeline-multibranch-defaults
+            # - workflow-durable-task-step
+            # - pipeline-rest-api
+            # - workflow-scm-step
+            # - pipeline-stage-step
+            # - pipeline-stage-tags-metadata
+            - pipeline-stage-view
+            # - workflow-step-api
+            # - workflow-support
+            # - plain-credentials
+            # - plugin-usage-plugin
+            # - plugin-util-api
+            # - postbuild-task
+            # - postgresql-api
+            # - database-postgresql
+            # - powershell
+            # - prism-api
+            # - prometheus
+            # - pubsub-light
+            # - purge-build-queue-plugin
+            # - blueocean-rest
+            # - blueocean-rest-impl
+            # - rebuild
+            # - remote-file
+            # - resource-disposer
+            # - scm-api
+            # - ssh-slaves
+            # - ssh-credentials
+            # - sshd
+            # - script-security
+            - scriptler
+            # - sse-gateway
+            - show-build-parameters
+            - sidebar-link
+            # - simple-theme-plugin
+            # - network-monitor
+            # - systemloadaverage-monitor
+            # - snakeyaml-api
+            # - solarized-theme
+            # - startup-trigger-plugin
+            # - structs
+            # - support-core
+            - text-finder
+            - terraform
+            - theme-manager
+            - timestamper
+            # - token-macro
+            # - toolenv
+            # - trilead-api
+            # - validating-yaml-parameter
+            # - variant
+            # - versioncolumn
+            # - view-job-filters
+            # - warnings-ng
+            # - blueocean-web
+            # - yet-another-build-visualizer
+            # - bouncycastle-api
+            # - commons-lang3-api
+            # - commons-text-api
+            # - blueocean-i18n
+            # - jquery
+            # - jsch
+            - ws-cleanup
+      - agentListenerService:
+          enabled: true
+          type: NodePort  # LoadBalancer, ClusterIP, NodePort
+          ports:
+            agentListener: 50000
